@@ -25,11 +25,11 @@ flowchart LR
     end
     subgraph CloudRun[Google Cloud Run · continuity-check]
       API[FastAPI app.main]
-      ADK[Google ADK runtime\nInMemoryRunner · Session]
+      ADK[Google ADK runtime<br/>InMemoryRunner · Session]
       AG[ContinuityCheckAgent]
       FC[fact_checker · claim_extractor]
       GC[gemini_client]
-      PC[parallel_client\nparallel-web SDK]
+      PC[parallel_client<br/>parallel-web SDK]
     end
     VX[(Vertex AI · Gemini 2.5 Flash)]
     PS[(Parallel Search API)]
