@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
+
+# local demo renders (video + scratch narration); the submission video is uploaded to YouTube/Vimeo, not the repo
+demo-assets/
