@@ -10,7 +10,7 @@ Form: https://agentic-cinema.devpost.com/ → "Enter a submission" (login: the D
 | Hosted project URL | https://continuity-check-231147782258.us-central1.run.app |
 | Code repository URL | https://github.com/localecho/continuity-check (public, MIT visible in About) |
 | Demo video URL | `<paste the YouTube/Vimeo URL after upload — file: demo-assets/continuity-check-demo.mp4>` |
-| Built with | Google Cloud (Vertex AI / Gemini 2.5 Flash), Google ADK, Parallel Search API (parallel-web SDK), Python, FastAPI, Cloud Run, Docker |
+| Built with | Google Cloud (Vertex AI / Gemini 2.5 Flash), Google ADK, Parallel Search API (parallel-web SDK), Python, FastAPI, Cloud Run, Docker, Lean 4 (proofs of the decision rules, not runtime) |
 | Team | solo |
 
 ## Project story (paste the whole block below into the description field)
@@ -18,7 +18,7 @@ Form: https://agentic-cinema.devpost.com/ → "Enter a submission" (login: the D
 (Copy verbatim from `DEVPOST.md` in this repo — sections: Inspiration · What it does · How we built it · Challenges · Accomplishments · What we learned · Artist statement · What's next · Built with · Links. It is already the scrubbed version.)
 
 ## Pre-submit checklist (each verified 2026-09-08 unless marked)
-- [x] Hosted URL live: `/health` OK, `/check-agent` returns verdicts with sources (revision 00006, min-instances 1)
+- [x] Hosted URL live: `/health` OK, `/check-agent` returns verdicts with sources (revision 00007, min-instances 1)
 - [x] Repo public, MIT detected in About
 - [x] Runtime use of Google Cloud (Vertex AI Gemini) AND Parallel Search (official SDK) — imported and called in `app/gemini_client.py`, `app/parallel_client.py`
 - [x] Google ADK agent exercised at runtime via `POST /check-agent`
