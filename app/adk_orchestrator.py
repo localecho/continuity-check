@@ -40,6 +40,7 @@ def build_continuity_check_agent(
     name: str = "continuity_check",
     gemini: GeminiClient | None = None,
     parallel: ParallelClient | None = None,
+    max_claims: int | None = None,
 ):
     """Factory so importing this module never requires google-adk to be
     installed -- only calling this function does. Accepts injectable
@@ -58,17 +59,18 @@ def build_continuity_check_agent(
         `continuity_report` and yields one final Event with it as text.
         """
 
-        def __init__(self, agent_name: str, gemini: GeminiClient, parallel: ParallelClient):
+        def __init__(self, agent_name: str, gemini: GeminiClient, parallel: ParallelClient, max_claims: int | None):
             super().__init__(name=agent_name)
             self._gemini = gemini
             self._parallel = parallel
+            self._max_claims = max_claims
 
         async def _run_async_impl(self, ctx: "InvocationContext") -> AsyncGenerator["Event", None]:
             script = ctx.session.state.get("script", "")
             # check_script is synchronous and blocking (it runs a
             # ThreadPoolExecutor internally) -- push it off the event loop
             # rather than block it for the whole 15-40s run.
-            verdicts = await asyncio.to_thread(check_script, script, self._gemini, self._parallel)
+            verdicts = await asyncio.to_thread(check_script, script, self._gemini, self._parallel, 5, self._max_claims)
 
             report = [
                 {
@@ -99,13 +101,14 @@ def build_continuity_check_agent(
                 actions=EventActions(state_delta={"continuity_report": report}),
             )
 
-    return ContinuityCheckAgent(name, gemini, parallel)
+    return ContinuityCheckAgent(name, gemini, parallel, max_claims)
 
 
 async def run_continuity_check_via_adk(
     script: str,
     gemini: GeminiClient | None = None,
     parallel: ParallelClient | None = None,
+    max_claims: int | None = None,
 ) -> list[dict]:
     """Actually run the pipeline through the ADK runtime (InMemoryRunner +
     a real session) instead of just constructing the agent object -- this
@@ -116,7 +119,7 @@ async def run_continuity_check_via_adk(
     from google.adk.runners import InMemoryRunner
     from google.genai import types
 
-    agent = build_continuity_check_agent(gemini=gemini, parallel=parallel)
+    agent = build_continuity_check_agent(gemini=gemini, parallel=parallel, max_claims=max_claims)
     runner = InMemoryRunner(agent=agent, app_name="continuity_check")
 
     user_id = "demo-user"

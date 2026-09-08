@@ -1,7 +1,7 @@
 # Turnkey checklist -- one thing left, now that Step 0 is done
 
 Deadline: **2026-09-09, 2:00pm PDT**. Everything code-side is done and
-tested (`python -m pytest tests/ -q` -- 5/5 passing, no credentials
+tested (`python -m pytest tests/ -q` -- 12/12 passing, no credentials
 required).
 
 ## Step 0 -- GCP auth -- DONE 2026-09-08
@@ -85,9 +85,8 @@ sample script (~15-40s, varies by API latency).
 A silent 4-frame GIF of a real live run is saved in Dropbox at
 `demo-assets/continuity-check-live-demo.gif` -- this is a genuine capture
 (not staged/mocked data), useful as a reference for what the recording
-should show, but it is NOT the Devpost submission video: Claude has no
-microphone/voice or full-video capture tool, so it can't produce the
-actual narrated ~3-minute recording. You'll need to record yourself
+should show, but it is NOT the Devpost submission video: no narrated
+recording has been produced yet. You'll need to record yourself
 (QuickTime screen recording + your own narration off `DEMO_SCRIPT.md`)
 against the live URL, then upload to YouTube/Vimeo (unlisted is fine,
 Devpost just needs a URL).
