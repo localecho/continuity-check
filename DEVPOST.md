@@ -67,6 +67,6 @@ Python, FastAPI, Cloud Run, Docker.
 
 ## Links
 
-- GitHub repo: `<fill in after `gh repo create` -- see SETUP_TODO.md>`
-- Live demo URL: `<fill in after Cloud Run deploy>`
+- GitHub repo: https://github.com/localecho/continuity-check
+- Live demo URL: https://continuity-check-231147782258.us-central1.run.app
 - Demo video: `<fill in after recording DEMO_SCRIPT.md>`

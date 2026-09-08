@@ -46,31 +46,33 @@ curl -s -X POST localhost:8000/check \
   -d "{\"script\": \"$(cat data/sample_script.txt | sed 's/"/\\"/g')\"}" | python3 -m json.tool
 ```
 
-## Step 4 -- Cloud Run deploy (~10 min)
+## Step 4 -- Cloud Run deploy -- DONE 2026-09-08
+
+Live at **https://continuity-check-231147782258.us-central1.run.app** --
+this is the hosted project URL for the Devpost form. `GET /health` on the
+live service confirms both Gemini and Parallel reachable from the
+deployed container itself, not just localhost.
+
+One fresh-project wrinkle hit and fixed: the default Compute service
+account (`231147782258-compute@developer.gserviceaccount.com`) needed
+`roles/storage.objectViewer`, `roles/artifactregistry.writer`, and
+`roles/logging.logWriter` granted before Cloud Build could resolve the
+uploaded source -- a brand-new GCP project doesn't have these by default.
+Already applied; nothing to redo.
+
+Try it live:
 
 ```bash
-gcloud run deploy continuity-check \
-  --source . \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars GOOGLE_CLOUD_PROJECT=continuity-check-bdl,PARALLEL_API_KEY=$PARALLEL_API_KEY
+curl -s -X POST https://continuity-check-231147782258.us-central1.run.app/check \
+  -H "Content-Type: application/json" \
+  -d "{\"script\": \"$(cat data/sample_script.txt | sed 's/"/\\"/g')\"}" | python3 -m json.tool
 ```
 
-Note the printed service URL -- that's the "hosted project URL" Devpost
-wants.
+## Step 5 -- public repo -- DONE 2026-09-08
 
-## Step 5 -- public repo
-
-```bash
-cd /Users/brighamhall/projects/agentic-cinema-hackathon
-git add -A
-git commit -m "Continuity Check: Gemini + Parallel fact-checking agent for Agentic Cinema hackathon"
-gh repo create localecho/continuity-check --public --source=. --push
-```
-
-(Swap `localecho` for whichever GitHub account/org you want the entry
-under.) LICENSE (MIT) is already in the repo -- satisfies the "complete
-open-source license" requirement.
+https://github.com/localecho/continuity-check -- public, MIT LICENSE
+already in the repo (satisfies the "complete open-source license"
+requirement), pushed and up to date.
 
 ## Step 6 -- record the demo video
 
