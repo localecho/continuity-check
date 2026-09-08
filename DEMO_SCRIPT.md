@@ -27,8 +27,9 @@ this file, not a paraphrase of it.
    11's landing date, the Berlin Wall date Derek gets wrong, and Marie
    Curie's two Nobel Prizes."
 
-6. **1:15-1:30** -- Cut to terminal. "One call: `POST /check` with the
-   script text." Run the curl command from the README.
+6. **1:15-1:30** -- Cut to terminal. "One call: `POST /check-agent` with
+   the script text -- runs through a real Google ADK agent session." Run
+   the curl command from the README.
 
 7. **1:30-1:50** -- JSON response on screen. "Every claim comes back with a
    verdict, a reasoning line, and its sources."
