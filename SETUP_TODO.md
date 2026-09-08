@@ -1,32 +1,21 @@
-# Turnkey checklist -- the two things only you can do
+# Turnkey checklist -- one thing left, now that Step 0 is done
 
 Deadline: **2026-09-09, 2:00pm PDT**. Everything code-side is done and
 tested (`python -m pytest tests/ -q` -- 5/5 passing, no credentials
-required). What's left is entirely credentials + submission logistics.
+required).
 
-This is the *same blocker* that killed the August "All Things Agentic"
-hackathon three weeks ago (`~/projects/agentic-hackathon/DEPLOY_TOMORROW.md`:
-"no GCP account exists yet"). As of this morning, `gcloud auth list` still
-says "No credentialed accounts" on this machine. Do Step 0 first, today,
-not the night before -- it's the one step I can't do for you.
+## Step 0 -- GCP auth -- DONE 2026-09-08
 
-## Step 0 -- GCP auth (~10 min, blocking everything else)
+`gcloud auth login` + `gcloud auth application-default login` both
+completed. Project `continuity-check-bdl` created, billed to the
+BlueDuckLLC account, `run.googleapis.com` + `aiplatform.googleapis.com`
+enabled. Live-verified: `GeminiClient().preflight()` reaches Vertex AI, and
+a real `extract_claims()` call against `data/sample_script.txt` correctly
+pulled out 8 claims including the deliberately-wrong Berlin Wall date.
+`export GOOGLE_CLOUD_PROJECT=continuity-check-bdl` before running anything
+(see `.env.example`).
 
-```bash
-gcloud auth login
-gcloud projects create continuity-check-bdl --name="Continuity Check"
-gcloud config set project continuity-check-bdl
-gcloud beta billing projects link continuity-check-bdl --billing-account=<YOUR_BILLING_ACCOUNT_ID>
-gcloud services enable run.googleapis.com aiplatform.googleapis.com
-export GOOGLE_CLOUD_PROJECT=continuity-check-bdl
-```
-
-If you don't have a billing account yet: sign up for the no-cost trial at
-https://cloud.google.com/free, or use the hackathon's $100-credit form if
-it's still open (the post says the deadline for that was August 31, so
-likely closed -- the free trial is the fallback).
-
-## Step 1 -- Parallel API key (~5 min)
+## Step 1 -- Parallel API key (~5 min) -- the one thing only you can do
 
 Sign up at https://platform.parallel.ai, grab an API key, then:
 
