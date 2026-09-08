@@ -57,10 +57,13 @@ POST /check {"script": "..."}
 ```
 
 `app/adk_orchestrator.py` wraps this same pipeline as a Google ADK
-`BaseAgent` (`ContinuityCheckAgent`) so it can run inside ADK's
+`BaseAgent` (`ContinuityCheckAgent`) so it can run inside ADK's real
 session/event runtime -- see that file's docstring for why the pipeline
 logic lives once, in `fact_checker.py`, rather than being duplicated as ADK
-`LlmAgent`s.
+`LlmAgent`s. This isn't a demo-only module: `POST /check-agent` (below)
+actually runs it through `google.adk.runners.InMemoryRunner` with a real
+session on every call, and the live demo page (`GET /`) hits that endpoint
+-- not the plain `/check` pipeline.
 
 ## Run it locally
 
@@ -73,6 +76,11 @@ export PARALLEL_API_KEY=<your-parallel-api-key>
 
 uvicorn app.main:app --reload
 curl -X POST localhost:8000/check \
+  -H "Content-Type: application/json" \
+  -d "{\"script\": \"$(cat data/sample_script.txt)\"}"
+
+# same pipeline, run through the real Google ADK agent runtime:
+curl -X POST localhost:8000/check-agent \
   -H "Content-Type: application/json" \
   -d "{\"script\": \"$(cat data/sample_script.txt)\"}"
 ```

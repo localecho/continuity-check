@@ -30,8 +30,10 @@ publishing, without needing a researcher on staff.
 Gemini via Vertex AI extracts factual claims and evaluates the evidence
 retrieved through the Parallel Search API. Google ADK (Agent Development
 Kit) wires the extract -> search -> verdict pipeline into an agent
-(`ContinuityCheckAgent`). FastAPI provides the application's API layer, and
-the service is deployed on Cloud Run.
+(`ContinuityCheckAgent`), run for real on every request through
+`google.adk.runners.InMemoryRunner` with a live session -- the demo page
+calls this path (`POST /check-agent`), not a bypass. FastAPI provides the
+application's API layer, and the service is deployed on Cloud Run.
 
 ## Challenges we ran into
 
