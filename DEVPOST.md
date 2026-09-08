@@ -51,6 +51,17 @@ bounded fan-out, bounded rate) with Python conformance tests — and where
 every verdict is traceable to a specific cited source -- no hallucinated citations, and claims the search
 can't confirm are explicitly labeled UNVERIFIABLE rather than guessed at.
 
+## Already in use by two other systems (real, not planned)
+
+- **Carbon Footprint of Capital** (public calculator, https://carbon-footprint-calc-wine.vercel.app) runs its own
+  footnotes and methodology notes through Continuity Check and shows a verified badge that links back here.
+  The first audit (2026-09-08) graded 25 claims: 23 confirmed, 1 unverifiable, and 1 contradicted — a mislabeled
+  Cambridge index in a footnote that was corrected the same day. Audit tool + report live in that repo.
+- **Portfolio Carbon Steward** (a Strands agent for volunteer finance committees) has a `--verify` flag that sends
+  the sourced facts in each brief to Continuity Check and appends a live fact-check section.
+
+Both integrations are one-way HTTP calls into this service; nothing here depends on them.
+
 ## What we learned
 
 Grounding an LLM's verdict strictly on retrieved evidence (not its own
@@ -78,7 +89,7 @@ useful assistance means making uncertainty visible.
 
 ## What's next for Continuity Check
 
-A lightweight paste-and-check UI beyond today's demo page; batching
+Batching
 multiple claims into fewer Parallel Search calls to cut latency further; a
 browser extension that runs continuity checks on a Google Doc script draft
 inline.

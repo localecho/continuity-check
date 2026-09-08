@@ -38,6 +38,10 @@ requirement. Parallel's Search API (`app/parallel_client.py`, official
 is never asked to verdict from its own prior knowledge alone. FastAPI
 (`app/main.py`) exposes it as a service, deployed on Cloud Run.
 
+## Already in use
+
+Two other systems call this service today: the public [Carbon Footprint of Capital](https://carbon-footprint-calc-wine.vercel.app) calculator audits its own page claims with it (verified badge → [audit](https://carbon-footprint-calc-wine.vercel.app/claims-audit.html)), and the Portfolio Carbon Steward agent's `--verify` flag appends a live fact-check to each brief. One-way: they call us; we depend on nothing of theirs.
+
 ## Architecture
 
 Full UML (component, sequence, activity, class, state) and the Lean 4 specification of the decision rules are in [ARCHITECTURE.md](ARCHITECTURE.md).

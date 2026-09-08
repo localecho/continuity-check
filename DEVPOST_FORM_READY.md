@@ -5,7 +5,7 @@ Form: https://agentic-cinema.devpost.com/ → "Enter a submission" (login: the D
 | Field | Value |
 |---|---|
 | Project name | Continuity Check |
-| Tagline (≤ 200 chars) | Paste a script, get every factual claim back CONFIRMED / CONTRADICTED / UNVERIFIABLE with live cited sources — a Gemini + Parallel Search agent for solo creators, before you hit record. |
+| Tagline (≤ 200 chars) | Paste a script, get every factual claim back CONFIRMED / CONTRADICTED / UNVERIFIABLE with live cited sources — a Gemini + Parallel Search agent for solo creators. Already fact-checking two other live products. |
 | Partner track | **Parallel** |
 | Hosted project URL | https://continuity-check-231147782258.us-central1.run.app |
 | Code repository URL | https://github.com/localecho/continuity-check (public, MIT visible in About) |
