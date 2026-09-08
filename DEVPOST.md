@@ -54,11 +54,31 @@ Grounding an LLM's verdict strictly on retrieved evidence (not its own
 training knowledge) is a small prompt change with an outsized trust payoff
 for a fact-checking tool specifically.
 
+## Artist statement
+
+We built Continuity Check for the solo video creator who has no researcher
+on staff. For Google Cloud's Agentic Cinema hackathon, in the Parallel
+track, we wanted to make checking a script's factual claims a practical
+part of making a video -- not a resource reserved for a large studio.
+
+Our central design choice is restraint. Every verdict must be grounded
+strictly in retrieved live web evidence, never the model's training
+knowledge. We don't treat remembered information as a source or let the
+model invent a citation. When a search or model call fails, the system
+fails closed: it returns UNVERIFIABLE with the real reason, rather than
+guessing.
+
+We also chose a test that could expose failure. Our sample script has a
+character misremember the Berlin Wall's fall date by twenty years. We want
+the tool to catch a real error, not merely confirm easy facts. For us,
+useful assistance means making uncertainty visible.
+
 ## What's next for Continuity Check
 
-A lightweight web UI for pasting a script directly (today it's an API);
-batching claims per Parallel Search call to cut latency; a browser
-extension that runs continuity checks on a Google Doc script draft inline.
+A lightweight paste-and-check UI beyond today's demo page; batching
+multiple claims into fewer Parallel Search calls to cut latency further; a
+browser extension that runs continuity checks on a Google Doc script draft
+inline.
 
 ## Built with
 
