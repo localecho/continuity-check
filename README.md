@@ -40,6 +40,8 @@ is never asked to verdict from its own prior knowledge alone. FastAPI
 
 ## Architecture
 
+Full UML (component, sequence, activity, class, state) and the Lean 4 specification of the decision rules are in [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ```
 POST /check {"script": "..."}
         |

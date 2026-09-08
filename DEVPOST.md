@@ -45,8 +45,10 @@ mechanical once it happened.
 
 ## Accomplishments we're proud of
 
-A deterministic, multi-step agent where every verdict is traceable to a
-specific cited source -- no hallucinated citations, and claims the search
+A fixed, multi-step agent whose decision rules are specified and proven in
+Lean 4 (no evidence ⇒ UNVERIFIABLE, verdicts passed through never invented,
+bounded fan-out, bounded rate) with Python conformance tests — and where
+every verdict is traceable to a specific cited source -- no hallucinated citations, and claims the search
 can't confirm are explicitly labeled UNVERIFIABLE rather than guessed at.
 
 ## What we learned
@@ -84,7 +86,8 @@ inline.
 ## Built with
 
 Google Cloud (Vertex AI / Gemini), Google ADK, Parallel Search API,
-Python, FastAPI, Cloud Run, Docker.
+Python, FastAPI, Cloud Run, Docker, Lean 4 (specification + proofs of the
+decision rules; not part of the runtime).
 
 ## Links
 
