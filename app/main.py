@@ -1,0 +1,71 @@
+"""Continuity Check -- FastAPI service.
+
+POST /check with {"script": "..."} runs the full pipeline (extract claims ->
+Parallel Search -> Gemini verdict) and returns a structured report. Built
+for solo creators and small production teams who don't have a researcher on
+staff to catch a factual error before it ships in dialogue or a caption.
+"""
+from __future__ import annotations
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+from app.fact_checker import check_script
+from app.gemini_client import GeminiClient, ModelUnavailable
+from app.parallel_client import ParallelClient, SearchUnavailable
+
+app = FastAPI(title="Continuity Check", version="0.1.0")
+
+
+class CheckRequest(BaseModel):
+    script: str
+
+
+class SourceOut(BaseModel):
+    title: str
+    url: str
+
+
+class VerdictOut(BaseModel):
+    claim: str
+    category: str
+    source_line: str
+    verdict: str
+    reasoning: str
+    confidence: float
+    sources: list[SourceOut]
+    error: str | None = None
+
+
+@app.get("/health")
+def health() -> dict:
+    gemini_ok, gemini_msg = GeminiClient().preflight()
+    parallel_ok, parallel_msg = ParallelClient().preflight()
+    return {
+        "gemini": {"ok": gemini_ok, "detail": gemini_msg},
+        "parallel": {"ok": parallel_ok, "detail": parallel_msg},
+    }
+
+
+@app.post("/check", response_model=list[VerdictOut])
+def check(req: CheckRequest) -> list[VerdictOut]:
+    if not req.script.strip():
+        raise HTTPException(status_code=400, detail="script must not be empty")
+    try:
+        verdicts = check_script(req.script)
+    except (ModelUnavailable, SearchUnavailable) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return [
+        VerdictOut(
+            claim=v.claim.claim,
+            category=v.claim.category,
+            source_line=v.claim.source_line,
+            verdict=v.verdict,
+            reasoning=v.reasoning,
+            confidence=v.confidence,
+            sources=[SourceOut(title=s.title, url=s.url) for s in v.sources],
+            error=v.error,
+        )
+        for v in verdicts
+    ]
