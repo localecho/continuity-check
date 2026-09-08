@@ -85,6 +85,7 @@ def check_script(
     gemini: GeminiClient | None = None,
     parallel: ParallelClient | None = None,
     max_workers: int = 5,
+    max_claims: int | None = None,
 ) -> list[ClaimVerdict]:
     gemini = gemini or GeminiClient()
     parallel = parallel or ParallelClient()
@@ -92,6 +93,11 @@ def check_script(
     claims = extract_claims(script, client=gemini)
     if not claims:
         return []
+    if max_claims is not None and len(claims) > max_claims:
+        # Bound the fan-out: every claim costs one Parallel search + one Gemini
+        # call. The first N claims in script order are checked; the rest are
+        # dropped here rather than silently timing out the whole request.
+        claims = claims[:max_claims]
 
     # Each claim's search+verdict is independent of the others, so run them
     # concurrently -- sequentially, an 8-claim script took 60-120s (measured

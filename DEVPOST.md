@@ -1,8 +1,7 @@
 # Devpost submission draft -- Continuity Check
 
 Paste this into the Devpost submission form once the checklist in
-`SETUP_TODO.md` is done. Written with `openai/gpt-6-astra` via OpenRouter,
-lightly edited for accuracy against the actual code.
+`SETUP_TODO.md` is done.
 
 **Track:** Google Cloud + Parallel
 

@@ -127,26 +127,27 @@
     <p class="subtitle">Live demo &mdash; Google Cloud (Gemini/Vertex AI) + Parallel Search API. Agentic Cinema hackathon, Parallel track.</p>
   </header>
 
-  <div class="script-card"><span class="slug">INT. LATE-NIGHT NEWSROOM -- 1969</span>
+  <label for="script" class="subtitle" style="display:block;margin-bottom:6px">Paste any script or scene excerpt (the sample below has one deliberate error) &mdash; <span id="count" class="mono"></span></label>
+  <textarea id="script" class="script-card" spellcheck="false" style="width:100%;min-height:260px;border:1px solid var(--border);resize:vertical">INT. LATE-NIGHT NEWSROOM -- 1969
 
 MAYA hunches over a wire-service printer as it chatters out fresh copy.
 
-<span class="char">MAYA</span>
+MAYA
 Apollo 11 landed on the Moon on July 20th, 1969.
 Neil Armstrong was the first person to walk on it.
 
-<span class="char">DEREK</span>
+DEREK
 (not looking up)
 The Berlin Wall came down that same summer, right?
 
-<span class="char">MAYA</span>
+MAYA
 No -- that's 1989. You're twenty years off.
 
-<span class="char">DEREK</span>
+DEREK
 Fair. Did you know Marie Curie won two Nobel Prizes?
 
-<span class="char">MAYA</span>
-Physics and Chemistry. First person ever to do that.</div>
+MAYA
+Physics and Chemistry. First person ever to do that.</textarea>
 
   <button id="run">Run Continuity Check</button>
   <p id="status"></p>
@@ -154,7 +155,16 @@ Physics and Chemistry. First person ever to do that.</div>
 </div>
 
 <script>
-  const SCRIPT = document.querySelector(".script-card").innerText;
+  const MAX_CHARS = 8000;  // mirrors MAX_SCRIPT_CHARS on the server
+  const scriptEl = document.getElementById("script");
+  const countEl = document.getElementById("count");
+  function updateCount() {
+    const n = scriptEl.value.length;
+    countEl.textContent = `${n.toLocaleString()} / ${MAX_CHARS.toLocaleString()} chars`;
+    countEl.style.color = n > MAX_CHARS ? "var(--contra)" : "var(--ink-dim)";
+  }
+  scriptEl.addEventListener("input", updateCount);
+  updateCount();
   const btn = document.getElementById("run");
   const statusEl = document.getElementById("status");
   const resultsEl = document.getElementById("results");
@@ -168,7 +178,7 @@ Physics and Chemistry. First person ever to do that.</div>
     div.className = "card " + verdictClass(row.verdict);
     const sources = (row.sources || [])
       .slice(0, 3)
-      .map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${new URL(s.url).hostname}</a>`)
+      .map((s) => { let h = s.url; try { h = new URL(s.url).hostname; } catch (_) {} return `<a href="${s.url}" target="_blank" rel="noopener">${h}</a>`; })
       .join("");
     const reasoningText = row.reasoning || (row.error ? `Backend error: ${row.error}` : "");
     div.innerHTML = `
@@ -190,12 +200,13 @@ Physics and Chemistry. First person ever to do that.</div>
   btn.addEventListener("click", async () => {
     btn.disabled = true;
     resultsEl.innerHTML = "";
-    statusEl.textContent = "POST /check-agent -- running the Google ADK agent: extracting claims (Gemini), searching evidence (Parallel), rendering verdicts (Gemini)...";
+    if (!scriptEl.value.trim()) { statusEl.textContent = "Paste a script first."; btn.disabled = false; return; }
+    statusEl.textContent = "POST /check-agent -- running the Google ADK agent: extracting claims (Gemini), searching evidence (Parallel), rendering verdicts (Gemini)... typically 15-40s.";
     try {
       const res = await fetch("/check-agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ script: SCRIPT }),
+        body: JSON.stringify({ script: scriptEl.value }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));

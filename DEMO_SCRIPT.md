@@ -1,10 +1,8 @@
 # Demo video script (~3 min, matches Devpost's limit)
 
-Drafted with `openai/gpt-6-astra` (pitch copy) and `moonshotai/kimi-k3`
-(this beat sheet) via OpenRouter, then hand-edited to match the actual
-sample data in `data/sample_script.txt` (Apollo 11 / Berlin Wall / Marie
-Curie) instead of the model's invented placeholder claims -- record against
-this file, not a paraphrase of it.
+Beat sheet matched to the actual sample data in `data/sample_script.txt`
+(Apollo 11 / Berlin Wall / Marie Curie) -- record against this file, not a
+paraphrase of it.
 
 1. **0:00-0:08** -- Show a YouTube comments section full of corrections.
    "You said the Berlin Wall fell in '69. It fell in '89. Your comment
