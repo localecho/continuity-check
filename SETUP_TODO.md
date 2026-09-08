@@ -15,40 +15,36 @@ pulled out 8 claims including the deliberately-wrong Berlin Wall date.
 `export GOOGLE_CLOUD_PROJECT=continuity-check-bdl` before running anything
 (see `.env.example`).
 
-## Step 1 -- Parallel API key (~5 min) -- the one thing only you can do
+## Step 1 -- Parallel API key -- DONE 2026-09-08
 
-Sign up at https://platform.parallel.ai, grab an API key, then:
+Key obtained, stored in `.env` (gitignored, chmod 600) -- never committed.
+`ParallelClient().preflight()` confirmed reachable.
 
-```bash
-export PARALLEL_API_KEY=<your-key>
-```
+## Step 2 -- confirm both are live -- DONE 2026-09-08
 
-## Step 2 -- confirm both are live
+`GET /health` path live-verified via direct calls to both clients (not
+just the endpoint): Gemini and Parallel both reachable.
+
+## Step 3 -- run the real demo call -- DONE 2026-09-08
+
+Ran `check_script()` directly (equivalent to `POST /check`) against the
+real `data/sample_script.txt`. Confirmed live: the Berlin Wall claim comes
+back CONTRADICTED (cites en.wikipedia.org/wiki/Fall_of_the_Berlin_Wall +
+history.state.gov), and Apollo 11 / Neil Armstrong / Marie Curie all come
+back CONFIRMED with real NASA / Wikipedia / Nobel Prize source URLs. This
+is the hero shot for the demo video -- not a mocked response.
+
+To re-run it yourself via the actual HTTP endpoint:
 
 ```bash
 cd /Users/brighamhall/projects/agentic-cinema-hackathon
-source .venv/bin/activate  # already created, has fastapi/pydantic
-pip install -r requirements.txt
+source .venv/bin/activate
+set -a; source .env; set +a
 uvicorn app.main:app --reload &
-curl localhost:8000/health
-```
-
-Expect `{"gemini": {"ok": true, ...}, "parallel": {"ok": true, ...}}`. If
-either is `false`, the `detail` field names exactly what's missing --
-`gemini_client.py` and `parallel_client.py` are written fail-closed on
-purpose, so this should never silently look healthy when it isn't.
-
-## Step 3 -- run the real demo call
-
-```bash
 curl -s -X POST localhost:8000/check \
   -H "Content-Type: application/json" \
   -d "{\"script\": \"$(cat data/sample_script.txt | sed 's/"/\\"/g')\"}" | python3 -m json.tool
 ```
-
-Confirm the Berlin Wall claim in `data/sample_script.txt` comes back
-CONTRADICTED and the Apollo 11 / Marie Curie claims come back CONFIRMED,
-each with real source URLs -- that's the proof this isn't a mocked demo.
 
 ## Step 4 -- Cloud Run deploy (~10 min)
 
