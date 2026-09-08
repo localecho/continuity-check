@@ -190,9 +190,9 @@ Physics and Chemistry. First person ever to do that.</div>
   btn.addEventListener("click", async () => {
     btn.disabled = true;
     resultsEl.innerHTML = "";
-    statusEl.textContent = "POST /check -- extracting claims (Gemini), searching evidence (Parallel), rendering verdicts (Gemini)...";
+    statusEl.textContent = "POST /check-agent -- running the Google ADK agent: extracting claims (Gemini), searching evidence (Parallel), rendering verdicts (Gemini)...";
     try {
-      const res = await fetch("/check", {
+      const res = await fetch("/check-agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ script: SCRIPT }),

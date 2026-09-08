@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from app.adk_orchestrator import run_continuity_check_via_adk
 from app.fact_checker import check_script
 from app.gemini_client import GeminiClient, ModelUnavailable
 from app.parallel_client import ParallelClient, SearchUnavailable
@@ -89,4 +90,34 @@ def check(req: CheckRequest) -> list[VerdictOut]:
             error=v.error,
         )
         for v in verdicts
+    ]
+
+
+@app.post("/check-agent", response_model=list[VerdictOut])
+async def check_agent(req: CheckRequest) -> list[VerdictOut]:
+    """Same pipeline as /check, but run through a real Google ADK
+    InMemoryRunner + session (see app/adk_orchestrator.py) instead of
+    calling fact_checker.check_script directly -- this is the hackathon's
+    Agent Framework requirement as an actually-exercised code path, not
+    just an unused module in the repo.
+    """
+    if not req.script.strip():
+        raise HTTPException(status_code=400, detail="script must not be empty")
+    try:
+        report = await run_continuity_check_via_adk(req.script)
+    except (ModelUnavailable, SearchUnavailable) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return [
+        VerdictOut(
+            claim=row["claim"],
+            category=row["category"],
+            source_line=row["source_line"],
+            verdict=row["verdict"],
+            reasoning=row["reasoning"],
+            confidence=row["confidence"],
+            sources=[SourceOut(title=s["title"], url=s["url"]) for s in row["sources"]],
+            error=row["error"],
+        )
+        for row in report
     ]
