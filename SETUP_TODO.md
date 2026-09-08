@@ -78,8 +78,24 @@ requirement), pushed and up to date.
 
 Script is in `DEMO_SCRIPT.md`, timed to the ~3-minute limit and built
 around `data/sample_script.txt` so what's on screen matches what's in the
-repo. Screen-record the terminal + JSON response per the script's beats,
-upload to YouTube/Vimeo (unlisted is fine, Devpost just needs a URL).
+repo. A live demo page is now mounted at the hosted URL itself (`GET /`)
+-- click "Run Continuity Check" and the real pipeline runs against the
+sample script (~15-40s, varies by API latency).
+
+A silent 4-frame GIF of a real live run is saved in Dropbox at
+`demo-assets/continuity-check-live-demo.gif` -- this is a genuine capture
+(not staged/mocked data), useful as a reference for what the recording
+should show, but it is NOT the Devpost submission video: Claude has no
+microphone/voice or full-video capture tool, so it can't produce the
+actual narrated ~3-minute recording. You'll need to record yourself
+(QuickTime screen recording + your own narration off `DEMO_SCRIPT.md`)
+against the live URL, then upload to YouTube/Vimeo (unlisted is fine,
+Devpost just needs a URL).
+
+One real timing note the GIF surfaced: the live run takes 15-40s
+end-to-end (down from 60-120s after a concurrency fix -- see the
+2026-09-08 commits). Budget for that wait in the recording, or start the
+run and talk over it per the script's beats.
 
 ## Step 7 -- Devpost submission form
 
