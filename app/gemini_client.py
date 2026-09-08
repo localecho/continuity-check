@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
+import threading
+from dataclasses import dataclass, field
 
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
@@ -25,6 +26,8 @@ class GeminiClient:
     project: str | None = None
     location: str = "us-central1"
     model_name: str = GEMINI_MODEL
+    _model_instance: object = field(default=None, init=False, repr=False, compare=False)
+    _init_lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         self.project = self.project or os.environ.get("GOOGLE_CLOUD_PROJECT")
@@ -36,16 +39,26 @@ class GeminiClient:
                 "project <id>` and export GOOGLE_CLOUD_PROJECT, or pass "
                 "project= explicitly."
             )
-        try:
-            import vertexai
-            from vertexai.generative_models import GenerativeModel
-        except ImportError as exc:
-            raise ModelUnavailable(
-                "google-cloud-aiplatform is not installed -- "
-                "`pip install -r requirements.txt`."
-            ) from exc
-        vertexai.init(project=self.project, location=self.location)
-        return GenerativeModel(self.model_name)
+        # vertexai.init() + GenerativeModel() do real credential/metadata
+        # round-trips -- cache once per client instance instead of paying
+        # that cost on every complete() call (measured: this was the
+        # dominant cost in an 8-claim script taking 60-120s end-to-end).
+        if self._model_instance is not None:
+            return self._model_instance
+        with self._init_lock:
+            if self._model_instance is not None:
+                return self._model_instance
+            try:
+                import vertexai
+                from vertexai.generative_models import GenerativeModel
+            except ImportError as exc:
+                raise ModelUnavailable(
+                    "google-cloud-aiplatform is not installed -- "
+                    "`pip install -r requirements.txt`."
+                ) from exc
+            vertexai.init(project=self.project, location=self.location)
+            self._model_instance = GenerativeModel(self.model_name)
+            return self._model_instance
 
     def complete(self, prompt: str, *, temperature: float = 0.2) -> str:
         model = self._model()

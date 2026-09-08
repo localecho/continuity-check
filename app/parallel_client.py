@@ -27,9 +27,14 @@ class SearchResult:
 class ParallelClient:
     api_key: str | None = None
     max_results: int = 5
+    _sdk_client: object = field(default=None, init=False, repr=False, compare=False)
+    _init_lock: object = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         self.api_key = self.api_key or os.environ.get("PARALLEL_API_KEY")
+        import threading
+
+        self._init_lock = threading.Lock()
 
     def _client(self):
         if not self.api_key:
@@ -37,13 +42,21 @@ class ParallelClient:
                 "PARALLEL_API_KEY is not set -- get one at platform.parallel.ai "
                 "and export PARALLEL_API_KEY."
             )
-        try:
-            from parallel import Parallel
-        except ImportError as exc:
-            raise SearchUnavailable(
-                "parallel-web SDK is not installed -- `pip install parallel-web`."
-            ) from exc
-        return Parallel(api_key=self.api_key)
+        # Cache the SDK client instance once per ParallelClient instead of
+        # constructing it on every search() call.
+        if self._sdk_client is not None:
+            return self._sdk_client
+        with self._init_lock:
+            if self._sdk_client is not None:
+                return self._sdk_client
+            try:
+                from parallel import Parallel
+            except ImportError as exc:
+                raise SearchUnavailable(
+                    "parallel-web SDK is not installed -- `pip install parallel-web`."
+                ) from exc
+            self._sdk_client = Parallel(api_key=self.api_key)
+            return self._sdk_client
 
     def search(self, query: str) -> list[SearchResult]:
         client = self._client()

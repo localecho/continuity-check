@@ -8,6 +8,7 @@ This is the deterministic, multi-step agent the hackathon asks for:
 """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
 from app.claim_extractor import Claim, extract_claims
@@ -51,46 +52,50 @@ def _format_evidence(results: list[SearchResult]) -> str:
     return "\n".join(lines)
 
 
+def _check_one_claim(
+    claim: Claim, gemini: GeminiClient, parallel: ParallelClient
+) -> ClaimVerdict:
+    try:
+        results = parallel.search(claim.claim)
+    except SearchUnavailable as exc:
+        return ClaimVerdict(claim=claim, verdict="UNVERIFIABLE", reasoning="", confidence=0.0, error=str(exc))
+
+    try:
+        parsed = gemini.complete_json(
+            VERDICT_PROMPT.format(claim=claim.claim, evidence=_format_evidence(results))
+        )
+    except ModelUnavailable as exc:
+        return ClaimVerdict(
+            claim=claim, verdict="UNVERIFIABLE", reasoning="", confidence=0.0, sources=results, error=str(exc)
+        )
+
+    if not isinstance(parsed, dict):
+        parsed = {}
+    return ClaimVerdict(
+        claim=claim,
+        verdict=str(parsed.get("verdict", "UNVERIFIABLE")),
+        reasoning=str(parsed.get("reasoning", "")),
+        confidence=float(parsed.get("confidence", 0.0) or 0.0),
+        sources=results,
+    )
+
+
 def check_script(
     script: str,
     gemini: GeminiClient | None = None,
     parallel: ParallelClient | None = None,
+    max_workers: int = 5,
 ) -> list[ClaimVerdict]:
     gemini = gemini or GeminiClient()
     parallel = parallel or ParallelClient()
 
     claims = extract_claims(script, client=gemini)
-    verdicts: list[ClaimVerdict] = []
+    if not claims:
+        return []
 
-    for claim in claims:
-        try:
-            results = parallel.search(claim.claim)
-        except SearchUnavailable as exc:
-            verdicts.append(
-                ClaimVerdict(claim=claim, verdict="UNVERIFIABLE", reasoning="", confidence=0.0, error=str(exc))
-            )
-            continue
-
-        try:
-            parsed = gemini.complete_json(
-                VERDICT_PROMPT.format(claim=claim.claim, evidence=_format_evidence(results))
-            )
-        except ModelUnavailable as exc:
-            verdicts.append(
-                ClaimVerdict(claim=claim, verdict="UNVERIFIABLE", reasoning="", confidence=0.0, sources=results, error=str(exc))
-            )
-            continue
-
-        if not isinstance(parsed, dict):
-            parsed = {}
-        verdicts.append(
-            ClaimVerdict(
-                claim=claim,
-                verdict=str(parsed.get("verdict", "UNVERIFIABLE")),
-                reasoning=str(parsed.get("reasoning", "")),
-                confidence=float(parsed.get("confidence", 0.0) or 0.0),
-                sources=results,
-            )
-        )
-
-    return verdicts
+    # Each claim's search+verdict is independent of the others, so run them
+    # concurrently -- sequentially, an 8-claim script took 60-120s (measured
+    # live against Cloud Run); a script-length claim count stays well under
+    # both APIs' rate limits at this concurrency.
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(claims))) as pool:
+        return list(pool.map(lambda c: _check_one_claim(c, gemini, parallel), claims))

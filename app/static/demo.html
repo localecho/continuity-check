@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Continuity Check — Live Demo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --surface: #ffffff;
+    --ink: #201f1c;
+    --ink-dim: #6e6a62;
+    --border: #ddd8cd;
+    --done: #2e7d4f;
+    --done-bg: #e7f3ec;
+    --done-border: #bfe0cd;
+    --contra: #b8351f;
+    --contra-bg: #fbe9e6;
+    --contra-border: #f0c1b8;
+    --unv-bg: #f1efe9;
+    --unv-border: #ddd8cd;
+    --code-bg: #201f1c;
+    --code-ink: #f1efe9;
+    --code-accent: #ff8a70;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 60px; }
+  .mono { font-family: "IBM Plex Mono", monospace; }
+
+  header { margin-bottom: 22px; }
+  h1 {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+  }
+  .subtitle { color: var(--ink-dim); font-size: 0.92rem; }
+
+  .script-card {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 18px 22px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    margin-bottom: 18px;
+  }
+  .script-card .slug { color: var(--code-accent); font-weight: 600; }
+  .script-card .char { color: var(--code-accent); }
+
+  button#run {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: 0.95rem;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 13px 22px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  button#run:disabled { opacity: 0.6; cursor: wait; }
+
+  #status {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    color: var(--ink-dim);
+    margin: 10px 0 0;
+    min-height: 1.2em;
+  }
+
+  #results { margin-top: 22px; display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+  .card.confirmed { background: var(--done-bg); border-color: var(--done-border); }
+  .card.contradicted { background: var(--contra-bg); border-color: var(--contra-border); }
+  .card.unverifiable { background: var(--unv-bg); border-color: var(--unv-border); }
+
+  .card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .claim { font-weight: 600; flex: 1; }
+  .verdict-pill {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .verdict-pill.confirmed { background: var(--done); }
+  .verdict-pill.contradicted { background: var(--contra); }
+  .verdict-pill.unverifiable { background: var(--ink-dim); }
+
+  .reasoning { color: var(--ink-dim); font-size: 0.88rem; margin: 4px 0; }
+  .sources { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .sources a {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 7px;
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Continuity Check</h1>
+    <p class="subtitle">Live demo &mdash; Google Cloud (Gemini/Vertex AI) + Parallel Search API. Agentic Cinema hackathon, Parallel track.</p>
+  </header>
+
+  <div class="script-card"><span class="slug">INT. LATE-NIGHT NEWSROOM -- 1969</span>
+
+MAYA hunches over a wire-service printer as it chatters out fresh copy.
+
+<span class="char">MAYA</span>
+Apollo 11 landed on the Moon on July 20th, 1969.
+Neil Armstrong was the first person to walk on it.
+
+<span class="char">DEREK</span>
+(not looking up)
+The Berlin Wall came down that same summer, right?
+
+<span class="char">MAYA</span>
+No -- that's 1989. You're twenty years off.
+
+<span class="char">DEREK</span>
+Fair. Did you know Marie Curie won two Nobel Prizes?
+
+<span class="char">MAYA</span>
+Physics and Chemistry. First person ever to do that.</div>
+
+  <button id="run">Run Continuity Check</button>
+  <p id="status"></p>
+  <div id="results"></div>
+</div>
+
+<script>
+  const SCRIPT = document.querySelector(".script-card").innerText;
+  const btn = document.getElementById("run");
+  const statusEl = document.getElementById("status");
+  const resultsEl = document.getElementById("results");
+
+  function verdictClass(v) {
+    return v.toLowerCase();
+  }
+
+  function renderCard(row, i) {
+    const div = document.createElement("div");
+    div.className = "card " + verdictClass(row.verdict);
+    const sources = (row.sources || [])
+      .slice(0, 3)
+      .map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${new URL(s.url).hostname}</a>`)
+      .join("");
+    const reasoningText = row.reasoning || (row.error ? `Backend error: ${row.error}` : "");
+    div.innerHTML = `
+      <div class="card-head">
+        <span class="claim">${row.claim}</span>
+        <span class="verdict-pill ${verdictClass(row.verdict)}">${row.verdict}</span>
+      </div>
+      <p class="reasoning">${reasoningText}</p>
+      <div class="sources">${sources}</div>
+    `;
+    div.style.opacity = "0";
+    resultsEl.appendChild(div);
+    setTimeout(() => {
+      div.style.transition = "opacity 0.3s ease";
+      div.style.opacity = "1";
+    }, i * 220);
+  }
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    resultsEl.innerHTML = "";
+    statusEl.textContent = "POST /check -- extracting claims (Gemini), searching evidence (Parallel), rendering verdicts (Gemini)...";
+    try {
+      const res = await fetch("/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script: SCRIPT }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || res.statusText);
+      }
+      const rows = await res.json();
+      statusEl.textContent = `${rows.length} claim(s) checked against live web evidence.`;
+      rows.forEach((row, i) => renderCard(row, i));
+    } catch (err) {
+      statusEl.textContent = "Error: " + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

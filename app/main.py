@@ -7,7 +7,11 @@ staff to catch a factual error before it ships in dialogue or a caption.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.fact_checker import check_script
@@ -15,6 +19,15 @@ from app.gemini_client import GeminiClient, ModelUnavailable
 from app.parallel_client import ParallelClient, SearchUnavailable
 
 app = FastAPI(title="Continuity Check", version="0.1.0")
+
+# Open CORS: this is a public demo endpoint with no auth/user data, meant
+# to be called directly from a browser demo page.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 
 class CheckRequest(BaseModel):
@@ -35,6 +48,14 @@ class VerdictOut(BaseModel):
     confidence: float
     sources: list[SourceOut]
     error: str | None = None
+
+
+_STATIC_DIR = Path(__file__).parent / "static"
+
+
+@app.get("/")
+def demo_page() -> FileResponse:
+    return FileResponse(_STATIC_DIR / "demo.html")
 
 
 @app.get("/health")
