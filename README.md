@@ -38,6 +38,20 @@ requirement. Parallel's Search API (`app/parallel_client.py`, official
 is never asked to verdict from its own prior knowledge alone. FastAPI
 (`app/main.py`) exposes it as a service, deployed on Cloud Run.
 
+The project itself calls exactly two AI services at runtime, both compliant
+with the Contest's AI-usage rule: Gemini (via Vertex AI) and Parallel's
+Search API. Development tooling is a separate question the rule doesn't
+reach -- its "Limitation on Artificial Intelligence Usage" governs what the
+*Project* uses ("Projects may only use Google Cloud artificial intelligence
+tools... This restriction applies only to AI/agent tooling"), not what
+editor or coding assistant a human used to write it, the same way the IBM
+and Replit tracks note their runtime requirement holds "regardless of how
+the code was written." In the interest of full disclosure: this repo's
+commit history (via Claude Code) and pitch copy (via OpenRouter, prose only)
+were written with AI-assisted tooling during development, same as most
+competitive entries in 2026; none of that tooling is called by the shipped
+product.
+
 ## Already in use
 
 Two other systems call this service today: the public [Carbon Footprint of Capital](https://carbon-footprint-calc-wine.vercel.app) calculator audits its own page claims with it (verified badge → [audit](https://carbon-footprint-calc-wine.vercel.app/claims-audit.html)), and the Portfolio Carbon Steward agent's `--verify` flag appends a live fact-check to each brief. One-way: they call us; we depend on nothing of theirs.
