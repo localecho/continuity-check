@@ -9,7 +9,7 @@ Form: https://agentic-cinema.devpost.com/ → "Enter a submission" (login: the D
 | Partner track | **Parallel** |
 | Hosted project URL | https://continuity-check-231147782258.us-central1.run.app |
 | Code repository URL | https://github.com/localecho/continuity-check (public, MIT visible in About) |
-| Demo video URL | `<paste the YouTube/Vimeo URL after upload — file: demo-assets/continuity-check-demo.mp4>` |
+| Demo video URL | https://youtu.be/J35vwGZnKXQ (Unlisted; file: demo-assets/continuity-check-demo.mp4) |
 | Built with | Google Cloud (Vertex AI / Gemini 2.5 Flash), Google ADK, Parallel Search API (parallel-web SDK), Python, FastAPI, Cloud Run, Docker, Lean 4 (proofs of the decision rules, not runtime) |
 | Team | solo |
 

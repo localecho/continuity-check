@@ -104,4 +104,4 @@ decision rules; not part of the runtime).
 
 - GitHub repo: https://github.com/localecho/continuity-check
 - Live demo URL: https://continuity-check-231147782258.us-central1.run.app
-- Demo video: `<fill in after recording DEMO_SCRIPT.md>`
+- Demo video: https://youtu.be/J35vwGZnKXQ
