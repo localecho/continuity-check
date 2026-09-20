@@ -9,7 +9,12 @@ evidence found."
 from __future__ import annotations
 
 import os
+import threading
+import time
 from dataclasses import dataclass, field
+from typing import ClassVar
+
+PREFLIGHT_TTL_S = int(os.environ.get("PREFLIGHT_TTL_S", "60"))
 
 
 class SearchUnavailable(RuntimeError):
@@ -27,8 +32,14 @@ class SearchResult:
 class ParallelClient:
     api_key: str | None = None
     max_results: int = 5
+    _preflight_ttl_s: int = PREFLIGHT_TTL_S
     _sdk_client: object = field(default=None, init=False, repr=False, compare=False)
     _init_lock: object = field(default=None, init=False, repr=False, compare=False)
+
+    # Class-level, process-wide: /health builds a FRESH ParallelClient() on every
+    # hit (see app/main.py), so per-instance caching would never help.
+    _preflight_cache: ClassVar[dict[str | None, tuple[float, tuple[bool, str], int]]] = {}
+    _cache_lock: ClassVar[threading.Lock] = threading.Lock()
 
     def __post_init__(self) -> None:
         self.api_key = self.api_key or os.environ.get("PARALLEL_API_KEY")
@@ -77,8 +88,20 @@ class ParallelClient:
         return results
 
     def preflight(self) -> tuple[bool, str]:
+        # Asymmetric TTL (gpt-6-astra cross-check, 2026-09-20) -- see gemini_client.py.
+        key = self.api_key
+        now = time.monotonic()
+        with self._cache_lock:
+            cached = self._preflight_cache.get(key)
+            if cached is not None and now - cached[0] < cached[2]:
+                return cached[1]
         try:
             results = self.search("Google Cloud Gemini Enterprise Agent Platform")
-            return True, f"Parallel Search reachable, {len(results)} result(s) returned"
+            result = True, f"Parallel Search reachable, {len(results)} result(s) returned"
+            ttl = self._preflight_ttl_s
         except SearchUnavailable as exc:
-            return False, str(exc)
+            result = False, str(exc)
+            ttl = min(self._preflight_ttl_s, 10)
+        with self._cache_lock:
+            self._preflight_cache[key] = (now, result, ttl)
+        return result
