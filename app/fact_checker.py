@@ -88,15 +88,24 @@ def _check_one_claim(
     if not isinstance(parsed, dict):
         parsed = {}
     # Rule 2 (`grade_*_sound`): the model's verdict is passed through, never upgraded -- anything
-    # outside the three allowed values collapses to UNVERIFIABLE.
-    verdict = str(parsed.get("verdict", "UNVERIFIABLE")).upper()
+    # outside the three allowed values collapses to UNVERIFIABLE. .strip() first: real model JSON
+    # output occasionally carries incidental whitespace ("  CONFIRMED  "), which must not be
+    # mistaken for an invalid verdict (found by eval/run_eval.py's 11k-example harness).
+    verdict = str(parsed.get("verdict", "UNVERIFIABLE")).strip().upper()
     if verdict not in ALLOWED_VERDICTS:
         verdict = "UNVERIFIABLE"
+    # A non-numeric confidence (e.g. the model returns "high" instead of a
+    # number) must degrade to 0.0, not crash the whole batch -- also found by
+    # the eval harness.
+    try:
+        confidence = float(parsed.get("confidence", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        confidence = 0.0
     return ClaimVerdict(
         claim=claim,
         verdict=verdict,
         reasoning=str(parsed.get("reasoning", "")),
-        confidence=float(parsed.get("confidence", 0.0) or 0.0),
+        confidence=confidence,
         sources=results,
     )
 

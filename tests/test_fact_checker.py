@@ -106,3 +106,46 @@ def test_check_script_no_claims_returns_empty_list():
     verdicts = check_script("no factual claims here", gemini=gemini, parallel=parallel)
     assert verdicts == []
     assert parallel.queries == []
+
+
+def test_check_script_strips_whitespace_around_verdict():
+    """Found by eval/run_eval.py's 11k-example synthetic harness: a model
+    response of "  CONFIRMED  " (incidental whitespace, common in real LLM
+    JSON output) silently collapsed to UNVERIFIABLE because the ALLOWED_VERDICTS
+    membership check ran .upper() but never .strip()."""
+    gemini = FakeGemini(
+        [
+            [{"claim": "Water boils at 100 degrees Celsius.", "source_line": "L1", "category": "technical"}],
+            {"verdict": "  CONFIRMED  ", "reasoning": "Standard reference value.", "confidence": 0.9},
+        ]
+    )
+    parallel = FakeParallel(
+        {"Water boils at 100 degrees Celsius.": [
+            SearchResult(url="https://example.test/water", title="Water", snippet="Boils at 100C at sea level.")
+        ]}
+    )
+    verdicts = check_script("script", gemini=gemini, parallel=parallel)
+    assert len(verdicts) == 1
+    assert verdicts[0].verdict == "CONFIRMED"
+
+
+def test_check_script_survives_non_numeric_confidence():
+    """Found by eval/run_eval.py's synthetic harness: a model returning
+    confidence as a non-numeric string ("high") crashed float(...) uncaught,
+    taking down the whole check_script call for that batch instead of
+    degrading gracefully to a default confidence."""
+    gemini = FakeGemini(
+        [
+            [{"claim": "Gold has the chemical symbol Au.", "source_line": "L1", "category": "technical"}],
+            {"verdict": "CONFIRMED", "reasoning": "Standard reference.", "confidence": "high"},
+        ]
+    )
+    parallel = FakeParallel(
+        {"Gold has the chemical symbol Au.": [
+            SearchResult(url="https://example.test/gold", title="Gold", snippet="Symbol: Au.")
+        ]}
+    )
+    verdicts = check_script("script", gemini=gemini, parallel=parallel)
+    assert len(verdicts) == 1
+    assert verdicts[0].verdict == "CONFIRMED"
+    assert verdicts[0].confidence == 0.0
